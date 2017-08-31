@@ -28,16 +28,17 @@ class Poema extends Service
 		// remove tildes
 		$poem = $this->utils->removeTildes($poem);
 
-		// clears the poem part
+		// clears DIVs from text
 		$dom = new DOMDocument;
 		@$dom->loadHTML($poem);
 		while (($r = $dom->getElementsByTagName("div")) && $r->length) {
 			$r->item(0)->parentNode->removeChild($r->item(0));
 		}
-		while (($r = $dom->getElementsByTagName("span")) && $r->length) {
-			$r->item(0)->parentNode->removeChild($r->item(0));
-		}
-		$poem = substr($dom->saveHTML(), 129, -15);
+
+		// clean the author part
+		$poem = $dom->saveHTML();
+		$pos = strpos($poem, "</span></span><br><br>");
+		$poem = substr($poem, $pos+22);
 
 		// create a json object to send to the template
 		$responseContent = array(
@@ -47,6 +48,7 @@ class Poema extends Service
 
 		// create the response
 		$response = new Response();
+		$response->setCache("day");
 		$response->setResponseSubject("El poema del dia");
 		$response->createFromTemplate("basic.tpl", $responseContent);
 		return $response;
